@@ -1,28 +1,21 @@
 import PropTypes from 'prop-types';
-import {
-  Header,
-  Form,
-  FormButton,
-  FormInput,
-  FormButtonLabel,
-} from './SearchBAr.styled';
+import { Header, Form, FormButton, FormInput } from './SearchBAr.styled';
+import { ReactComponent as SearchIcon } from '../../icon/search.svg';
 
 const SearchBar = ({ onSubmit }) => {
   return (
     <Header>
       <Form onSubmit={onSubmit}>
-        <FormButton type="submit">
-          <FormButtonLabel>Search</FormButtonLabel>
+        <FormButton type="submit" aria-label="search">
+          <SearchIcon width="20" height="20" fill="black" />
         </FormButton>
 
         <FormInput
           type="text"
+          name="name"
           autoComplete="off"
           autoFocus
           placeholder="Search images and photos"
-          name="imageName"
-          value={this.state.imageName}
-          onChange={this.handleNameChange}
         />
       </Form>
     </Header>
