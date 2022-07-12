@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import PropTypes from 'prop-types';
 import {
   Header,
   Form,
@@ -7,47 +7,30 @@ import {
   FormButtonLabel,
 } from './SearchBAr.styled';
 
-class SearchBar extends Component {
-  state = {
-    imageName: '',
-  };
+const SearchBar = ({ onSubmit }) => {
+  return (
+    <Header>
+      <Form onSubmit={onSubmit}>
+        <FormButton type="submit">
+          <FormButtonLabel>Search</FormButtonLabel>
+        </FormButton>
 
-  handleNameChange = event => {
-    const { value } = event.currentTarget;
-    this.setState({ imageName: value.toLowerCase() });
-  };
-
-  handleNameSubmit = event => {
-    event.preventDefault();
-    if (this.state.imageName.trim() === '') {
-      alert('Wrong image name');
-      return;
-    }
-    this.props.onSubmit({ imageName: this.state.imageName });
-    this.setState({ imageName: '' });
-  };
-
-  render() {
-    return (
-      <Header>
-        <Form onSubmit={this.handleNameSubmit}>
-          <FormButton type="submit">
-            <FormButtonLabel>Search</FormButtonLabel>
-          </FormButton>
-
-          <FormInput
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            name="imageName"
-            value={this.state.imageName}
-            onChange={this.handleNameChange}
-          />
-        </Form>
-      </Header>
-    );
-  }
-}
+        <FormInput
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          name="imageName"
+          value={this.state.imageName}
+          onChange={this.handleNameChange}
+        />
+      </Form>
+    </Header>
+  );
+};
 
 export default SearchBar;
+
+SearchBar.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+};

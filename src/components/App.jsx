@@ -1,89 +1,80 @@
 import { GlobalStyle } from './GlobalStyle';
 import { Component } from 'react';
+import { mapper } from 'components/utilits/mapper';
 import SearchBar from './SearchBar';
 import ImageGallery from './ImageGallery';
 import Button from './Button/Button';
-import { fetchImagesByName } from 'components/service/image-api';
-
+import api from './service';
 
 class App extends Component {
   state = {
     images: [],
     searchName: '',
-    status: 'idle',
+    isLoading: false,
     page: 1,
     error: null,
   };
-  componentDidUpdate = (_, prevState) => {
+
+  async componentDidUpdate(_, prevState) {
     const prevName = prevState.searchName;
     const nextName = this.state.searchName;
-    const currentpage = prevState.page;
+    const prevPage = prevState.page;
     const nextPage = this.state.page;
 
-    if (prevName !== nextName || currentpage !== nextPage) {
-      this.setState({ status: 'pending' });
-      fetchImagesByName(nextName)
-        .then(data => {
-          return this.setState((state, props) => {
-            return {
-              images: [...state.images, ...data],
-              page: state.page || nextPage,
-              status: 'resolved',
-            };
-          });
-        })
-        .catch(error => this.setState({ status: 'rejected' }));
+    if (prevName !== nextName || nextPage > prevPage) {
+      this.setState({ isLoading: true });
+
+      try {
+        const { hits } = await api.fetchImages(nextName, nextPage);
+        const updatedImages = mapper(hits);
+
+        this.setState(state => ({
+          images: state.images
+            ? [...this.state.images, ...updatedImages]
+            : updatedImages,
+        }));
+      } catch (error) {
+        this.setState({ error });
+      } finally {
+        this.setState({ isLoading: false });
+      }
     }
-  };
+  }
 
-  componentDidMount = () => {
-    // this.setState({ isLoading: true });
-  };
+  handleSubmit = event => {
+    const form = event.target.elements;
+    const query = form.name.value;
+    const prevName = this.state.searchName;
+    if (prevName === query || query.trim() === '') {
+      return;
+    }
 
-  handleSubmit = ({ imageName }) => {
     this.setState(state => ({
       images: [],
-      searchName: imageName,
+      searchName: query,
       page: 1,
     }));
   };
-  handleClick = () => {
+
+  handleLoadMore = () => {
     this.setState(state => ({ page: state.page + 1 }));
   };
 
   render() {
-    const { images, error, status } = this.state;
+    const { images, isLoading, error } = this.state;
 
-    if (status === 'idle' && images.length === 0) {
-      console.log(images);
-      return (
-        <>
-          <SearchBar onSubmit={this.handleSubmit} />
-          <div>Enter your image name</div>
-        </>
-      );
-    }
-    if (status === 'pending') {
-      return (
-        <>
-          <SearchBar onSubmit={this.handleSubmit} />
-          <div>Loading...</div>
-        </>
-      );
-    }
-    if (status === 'rejected') {
-      return <h1>{error.message}</h1>;
-    }
-    if (status === 'resolved') {
-      return (
-        <>
-          <SearchBar onSubmit={this.handleSubmit} />
-          {images.length > 0 && <ImageGallery onImageData={images} />}
-          <Button onClick={this.handleClick} caption="Load More" />
-          <GlobalStyle />
-        </>
-      );
-    }
+    return (
+      <>
+        <SearchBar onSubmit={this.handleSubmit} />
+        {error && <div>Opps, wrong picture name </div>}
+        {images.length !== 0 && <ImageGallery images={images} />}
+        {isLoading && <div>Loading...</div>}
+        {images.length !== 0 && (
+          <Button onClick={this.handleLoadMore} caption="Load More" />
+        )}
+        <GlobalStyle />
+      </>
+    );
   }
 }
 
